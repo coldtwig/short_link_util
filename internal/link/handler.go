@@ -24,16 +24,22 @@ func (handler *LinkHandler) Create() http.HandlerFunc {
 		link := NewLink(payload.URL)
 		createdLink, err := handler.LinkRepository.Create(link)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusCreated)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		res.Json(w, createdLink, http.StatusAccepted)
+		res.Json(w, createdLink, http.StatusCreated)
 	}
 }
 func (handler *LinkHandler) GoTo() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		hash := r.PathValue("hash")
+		link, err := handler.LinkRepository.GetByHash(hash)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusNotFound)
+		}
 
+		http.Redirect(w, r, link.Url, http.StatusTemporaryRedirect)
 	}
 }
 func (handler *LinkHandler) Update() http.HandlerFunc {

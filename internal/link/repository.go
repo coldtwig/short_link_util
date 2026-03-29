@@ -1,6 +1,8 @@
 package link
 
-import "go/http-api/pkg/db"
+import (
+	"go/http-api/pkg/db"
+)
 
 type LinkRepository struct {
 	DataBase *db.Db
@@ -13,6 +15,11 @@ func NewLinkRepository(database *db.Db) *LinkRepository {
 }
 
 func (repo *LinkRepository) Create(link *Link) (*Link, error) {
+	res := repo.CheckHashInDb(link.Hash)
+	if res {
+		return nil, ErrorLinkUniqueHash
+	}
+
 	result := repo.DataBase.DB.Create(link)
 	if result.Error != nil {
 		return nil, result.Error
@@ -29,4 +36,10 @@ func (repo *LinkRepository) GetByHash(hash string) (*Link, error) {
 	}
 
 	return &link, nil
+}
+
+func (repo *LinkRepository) CheckHashInDb(hash string) bool {
+	var link Link
+	result := repo.DataBase.DB.First(&link, "hash = ?", hash)
+	return result.Error == nil
 }

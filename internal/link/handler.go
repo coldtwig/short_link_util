@@ -1,6 +1,7 @@
 package link
 
 import (
+	"errors"
 	"fmt"
 	"go/http-api/pkg/req"
 	"go/http-api/pkg/res"
@@ -21,8 +22,17 @@ func (handler *LinkHandler) Create() http.HandlerFunc {
 			return
 		}
 
-		link := NewLink(payload.URL)
-		createdLink, err := handler.LinkRepository.Create(link)
+		var link *Link
+		var createdLink *Link
+		for {
+			link = NewLink(payload.URL)
+			createdLink, err = handler.LinkRepository.Create(link)
+
+			if !errors.Is(err, ErrorLinkUniqueHash) {
+				break
+			}
+		}
+
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

@@ -5,6 +5,7 @@ import (
 	"go/http-api/internal/auth"
 	"go/http-api/internal/link"
 	"go/http-api/pkg/db"
+	"go/http-api/pkg/middleware"
 	"net/http"
 )
 
@@ -26,7 +27,7 @@ func main() {
 
 	server := http.Server{
 		Addr:    ":8081",
-		Handler: router,
+		Handler: middleware.Logging(router),
 	}
 
 	server.ListenAndServe()

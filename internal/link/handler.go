@@ -1,6 +1,7 @@
 package link
 
 import (
+	"errors"
 	"go/http-api/pkg/req"
 	"go/http-api/pkg/res"
 	"net/http"
@@ -92,6 +93,10 @@ func (handler *LinkHandler) Delete() http.HandlerFunc {
 		}
 
 		_, err = handler.LinkRepository.GetById(uint(idUint))
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -102,7 +107,7 @@ func (handler *LinkHandler) Delete() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		res.Json(w, nil, http.StatusOK)
+		res.Json(w, nil, http.StatusNoContent)
 	}
 }
 

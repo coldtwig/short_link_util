@@ -1,7 +1,6 @@
 package link
 
 import (
-	"fmt"
 	"go/http-api/pkg/req"
 	"go/http-api/pkg/res"
 	"net/http"
@@ -63,7 +62,7 @@ func (handler *LinkHandler) Update() http.HandlerFunc {
 		}
 
 		idString := r.PathValue("id")
-		id, err := strconv.ParseUint(idString, 10, 32)
+		id, err := strconv.ParseUint(idString, 10, 64)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -85,8 +84,25 @@ func (handler *LinkHandler) Update() http.HandlerFunc {
 }
 func (handler *LinkHandler) Delete() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id := r.PathValue("id")
-		fmt.Println(id)
+		idString := r.PathValue("id")
+		idUint, err := strconv.ParseUint(idString, 10, 64)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		_, err = handler.LinkRepository.GetById(uint(idUint))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		err = handler.LinkRepository.Delete(uint(idUint))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		res.Json(w, nil, http.StatusOK)
 	}
 }
 

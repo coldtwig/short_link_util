@@ -53,3 +53,22 @@ func (repo *LinkRepository) CheckHashInDb(hash string) bool {
 	result := repo.DataBase.DB.First(&link, "hash = ?", hash)
 	return result.Error == nil
 }
+
+func (repo *LinkRepository) Delete(id uint) error {
+	result := repo.DataBase.DB.Delete(&Link{}, id)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
+
+func (repo *LinkRepository) GetById(id uint) (*Link, error) {
+	var link Link
+	result := repo.DataBase.DB.First(&link, id)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &link, nil
+}

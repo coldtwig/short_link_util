@@ -10,7 +10,7 @@ func IsAuthed(next http.Handler) http.Handler {
 		authedHeader := r.Header.Get("Authorization")
 		token := strings.TrimPrefix(authedHeader, "Bearer ")
 		if token == "" {
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 		next.ServeHTTP(w, r)

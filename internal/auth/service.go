@@ -39,7 +39,7 @@ func (service *AuthService) Register(email, password, name string) (string, erro
 		return "", err
 	}
 
-	return user.Email, nil
+	return email, nil
 }
 
 func (service *AuthService) Login(email, password string) (string, error) {

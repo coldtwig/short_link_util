@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"fmt"
 	"go/http-api/configs"
 	"go/http-api/pkg/req"
 	"go/http-api/pkg/res"
@@ -25,12 +24,13 @@ func (handler *AuthHandler) Login() http.HandlerFunc {
 			return
 		}
 
-		fmt.Println(payload)
-
-		data := LoginResponse{
-			Token: "123",
+		email, err := handler.AuthService.Login(payload.Email, payload.Password)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
 		}
-		res.Json(w, data, http.StatusOK)
+
+		res.Json(w, email, http.StatusOK)
 	}
 }
 
@@ -40,7 +40,13 @@ func (handler *AuthHandler) Register() http.HandlerFunc {
 		if err != nil {
 			return
 		}
-		handler.AuthService.Register(payload.Email, payload.Password, payload.Name)
+		email, err := handler.AuthService.Register(payload.Email, payload.Password, payload.Name)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		res.Json(w, email, http.StatusOK)
 	}
 }
 

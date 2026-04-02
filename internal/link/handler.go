@@ -2,6 +2,8 @@ package link
 
 import (
 	"errors"
+	"fmt"
+	"go/http-api/configs"
 	"go/http-api/pkg/middleware"
 	"go/http-api/pkg/req"
 	"go/http-api/pkg/res"
@@ -13,6 +15,7 @@ import (
 
 type LinkHandlerDeps struct {
 	LinkRepository *LinkRepository
+	Config         *configs.Config
 }
 type LinkHandler struct {
 	LinkRepository *LinkRepository
@@ -55,12 +58,18 @@ func (handler *LinkHandler) GoTo() http.HandlerFunc {
 		http.Redirect(w, r, link.Url, http.StatusTemporaryRedirect)
 	}
 }
+
 func (handler *LinkHandler) Update() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := req.HandleBody[LinkUpdateRequest](w, r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
+		}
+
+		ContextEmailKey, ok := r.Context().Value(middleware.ContextEmailKey).(string)
+		if ok {
+			fmt.Println("ContextEmailKey:", ContextEmailKey)
 		}
 
 		idString := r.PathValue("id")
@@ -118,7 +127,7 @@ func NewLinkHandler(router *http.ServeMux, deps LinkHandlerDeps) *LinkHandler {
 	}
 
 	router.HandleFunc("POST /link", handler.Create())
-	router.Handle("PATCH /link/{id}", middleware.IsAuthed(handler.Update()))
+	router.Handle("PATCH /link/{id}", middleware.IsAuthed(handler.Update(), deps.Config))
 	router.HandleFunc("DELETE /link/{id}", handler.Delete())
 	router.HandleFunc("/{hash}", handler.GoTo())
 

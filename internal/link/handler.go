@@ -121,6 +121,32 @@ func (handler *LinkHandler) Delete() http.HandlerFunc {
 	}
 }
 
+func (handler *LinkHandler) GetAll() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		limitInt, err := strconv.Atoi(r.URL.Query().Get("limit"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		offsetInt, err := strconv.Atoi(r.URL.Query().Get("offset"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		links, err := handler.LinkRepository.GetAll(int(limitInt), int(offsetInt))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		}
+		count := handler.LinkRepository.Count()
+
+		res.Json(w, GetAllLinksResponse{
+			Links: links,
+			Count: count,
+		}, http.StatusOK)
+	}
+}
+
 func NewLinkHandler(router *http.ServeMux, deps LinkHandlerDeps) *LinkHandler {
 	handler := &LinkHandler{
 		LinkRepository: deps.LinkRepository,
@@ -130,6 +156,7 @@ func NewLinkHandler(router *http.ServeMux, deps LinkHandlerDeps) *LinkHandler {
 	router.Handle("PATCH /link/{id}", middleware.IsAuthed(handler.Update(), deps.Config))
 	router.HandleFunc("DELETE /link/{id}", handler.Delete())
 	router.HandleFunc("/{hash}", handler.GoTo())
+	router.Handle("/link", middleware.IsAuthed(handler.GetAll(), deps.Config))
 
 	return handler
 }

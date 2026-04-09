@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"go/http-api/configs"
+	"go/http-api/pkg/event"
 	"go/http-api/pkg/middleware"
 	"go/http-api/pkg/req"
 	"go/http-api/pkg/res"
@@ -16,9 +17,11 @@ import (
 type LinkHandlerDeps struct {
 	LinkRepository *LinkRepository
 	Config         *configs.Config
+	EventBus       *event.EventBus
 }
 type LinkHandler struct {
 	LinkRepository *LinkRepository
+	EventBus       *event.EventBus
 }
 
 func (handler *LinkHandler) Create() http.HandlerFunc {
@@ -55,6 +58,11 @@ func (handler *LinkHandler) GoTo() http.HandlerFunc {
 			return
 		}
 
+		// handler.StatRepository.AddClick(link.ID)
+		go handler.EventBus.Publish(event.Event{
+			Type: event.EventLinkVisited,
+			Data: link.ID,
+		})
 		http.Redirect(w, r, link.Url, http.StatusTemporaryRedirect)
 	}
 }
@@ -150,6 +158,7 @@ func (handler *LinkHandler) GetAll() http.HandlerFunc {
 func NewLinkHandler(router *http.ServeMux, deps LinkHandlerDeps) *LinkHandler {
 	handler := &LinkHandler{
 		LinkRepository: deps.LinkRepository,
+		EventBus:       deps.EventBus,
 	}
 
 	router.HandleFunc("POST /link", handler.Create())

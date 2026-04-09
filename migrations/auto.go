@@ -2,6 +2,7 @@ package main
 
 import (
 	"go/http-api/internal/link"
+	"go/http-api/internal/stat"
 	"go/http-api/internal/user"
 	"os"
 
@@ -21,5 +22,5 @@ func main() {
 		panic(err)
 	}
 
-	db.AutoMigrate(&link.Link{}, &user.User{})
+	db.AutoMigrate(&link.Link{}, &user.User{}, &stat.Stat{})
 }
